@@ -11,11 +11,13 @@ class MyEventEmitter {
     if (!this.#listeners[event]) {
       this.#listeners[event] = [];
     }
-    this.#listeners[event].push(callback);
+    this.#listeners[event].push({ callback, once: false });
   }
   once(event, callback) {
-    callback.once = true;
-    this.on(event, callback);
+    if (!this.#listeners[event]) {
+      this.#listeners[event] = [];
+    }
+    this.#listeners[event].push({ callback, once: true });
   }
   off(event, callback) {
     if (!this.#listeners[event]) {
@@ -23,7 +25,7 @@ class MyEventEmitter {
     }
 
     this.#listeners[event] = this.#listeners[event].filter(
-      (elem) => elem !== callback,
+      (elem) => elem.callback !== callback,
     );
   }
   emit(event, ...args) {
@@ -31,8 +33,8 @@ class MyEventEmitter {
       return;
     }
 
-    for (const callback of this.#listeners[event]) {
-      callback(...args);
+    for (const callbackObj of this.#listeners[event]) {
+      callbackObj.callback(...args);
     }
 
     this.#listeners[event] = this.#listeners[event].filter((el) => !el.once);
@@ -43,12 +45,23 @@ class MyEventEmitter {
 
       return;
     }
-    this.#listeners[event] = [callback, ...this.#listeners[event]];
+
+    this.#listeners[event] = [
+      { callback, once: false },
+      ...this.#listeners[event],
+    ];
   }
   prependOnceListener(event, callback) {
-    callback.once = true;
+    if (!this.#listeners[event]) {
+      this.#listeners[event] = [callback];
 
-    this.prependListener(event, callback);
+      return;
+    }
+
+    this.#listeners[event] = [
+      { callback, once: true },
+      ...this.#listeners[event],
+    ];
   }
   removeAllListeners(event) {
     if (!event) {
