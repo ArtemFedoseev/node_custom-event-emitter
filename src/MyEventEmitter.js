@@ -41,7 +41,7 @@ class MyEventEmitter {
   }
   prependListener(event, callback) {
     if (!this.#listeners[event]) {
-      this.#listeners[event] = [callback];
+      this.#listeners[event] = [{ callback, once: false }];
 
       return;
     }
@@ -53,7 +53,7 @@ class MyEventEmitter {
   }
   prependOnceListener(event, callback) {
     if (!this.#listeners[event]) {
-      this.#listeners[event] = [callback];
+      this.#listeners[event] = [{ callback, once: true }];
 
       return;
     }
